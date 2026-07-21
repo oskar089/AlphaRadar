@@ -1,10 +1,18 @@
-from pydantic_settings import BaseSettings
+from typing import Self
+
+from pydantic import model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     # Database
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/alpharadar"
-    redis_url: str = "redis://localhost:6379"
+    database_url: str = (
+        "postgresql+asyncpg://alpharadar:alpharadar@localhost:5432/alpharadar"
+    )
+    redis_url: str = "redis://localhost:6379/0"
+    portfolio_persistence: str = "memory"
+    celery_broker_url: str = "redis://localhost:6379/0"
+    celery_result_backend: str = "redis://localhost:6379/0"
 
     # API Keys
     yahoo_finance_api_key: str = ""
@@ -29,7 +37,20 @@ class Settings(BaseSettings):
     email_enabled: bool = False
     telegram_enabled: bool = False
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    @model_validator(mode="after")
+    def validate_recommendation_weights(self) -> Self:
+        if self.weight_technical + self.weight_fundamental <= 0.0:
+            raise ValueError(
+                "weight_technical + weight_fundamental must be greater than zero "
+                "for deterministic sentiment fallback"
+            )
+        return self
 
 
 settings = Settings()
