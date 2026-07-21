@@ -1,0 +1,71 @@
+services:
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://${ALPHARADAR_DB_USER:?ALPHARADAR_DB_USER must be set}:${ALPHARADAR_DB_PASSWORD:?ALPHARADAR_DB_PASSWORD must be set}@db:5432/alpharadar"
+      REDIS_URL: "redis://:${ALPHARADAR_REDIS_PASSWORD:?ALPHARADAR_REDIS_PASSWORD must be set}@redis:6379"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${ALPHARADAR_DB_USER:?ALPHARADAR_DB_USER must be set}
+      POSTGRES_PASSWORD: ${ALPHARADAR_DB_PASSWORD:?ALPHARADAR_DB_PASSWORD must be set}
+      POSTGRES_DB: alpharadar
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${ALPHARADAR_DB_USER:?ALPHARADAR_DB_USER must be set} -d alpharadar"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--requirepass", "${ALPHARADAR_REDIS_PASSWORD:?ALPHARADAR_REDIS_PASSWORD must be set}"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a '${ALPHARADAR_REDIS_PASSWORD:?ALPHARADAR_REDIS_PASSWORD must be set}' ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  worker:
+    build: .
+    command: ["celery", "-A", "alpharadar.worker.celery_app", "worker", "--loglevel=info"]
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://${ALPHARADAR_DB_USER:?ALPHARADAR_DB_USER must be set}:${ALPHARADAR_DB_PASSWORD:?ALPHARADAR_DB_PASSWORD must be set}@db:5432/alpharadar"
+      REDIS_URL: "redis://:${ALPHARADAR_REDIS_PASSWORD:?ALPHARADAR_REDIS_PASSWORD must be set}@redis:6379"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A alpharadar.worker.celery_app inspect ping --timeout 5 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+  beat:
+    build: .
+    command: ["celery", "-A", "alpharadar.worker.celery_app", "beat", "--loglevel=info"]
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://${ALPHARADAR_DB_USER:?ALPHARADAR_DB_USER must be set}:${ALPHARADAR_DB_PASSWORD:?ALPHARADAR_DB_PASSWORD must be set}@db:5432/alpharadar"
+      REDIS_URL: "redis://:${ALPHARADAR_REDIS_PASSWORD:?ALPHARADAR_REDIS_PASSWORD must be set}@redis:6379"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A alpharadar.worker.celery_app inspect ping --timeout 5 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  postgres_data:
