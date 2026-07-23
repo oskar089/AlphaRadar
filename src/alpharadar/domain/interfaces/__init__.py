@@ -1,9 +1,9 @@
-from alpharadar.domain.interfaces.data_provider import DataProvider
 from alpharadar.domain.interfaces.analyzer import (
-    TechnicalAnalyzer,
     FundamentalAnalyzer,
     SentimentAnalyzer,
+    TechnicalAnalyzer,
 )
+from alpharadar.domain.interfaces.data_provider import DataProvider
 from alpharadar.domain.interfaces.notifier import Notifier
 
 __all__ = [

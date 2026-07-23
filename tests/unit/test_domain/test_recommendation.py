@@ -1,7 +1,7 @@
 from alpharadar.domain.entities.recommendation import (
-    Recommendation,
     Action,
     AnalysisScores,
+    Recommendation,
 )
 
 

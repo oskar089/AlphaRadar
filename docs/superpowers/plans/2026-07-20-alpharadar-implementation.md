@@ -1,12 +1,12 @@
 # AlphaRadar Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** This plan is being completed by one implementation agent; commit and delivery steps remain orchestrator-owned. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a semi-autonomous stock analysis system that combines technical, fundamental, and sentiment analysis to generate buy/hold/sell recommendations for global markets.
 
 **Architecture:** Monolith Python with Clean Architecture (domain → application → infrastructure → API). Domain layer has zero dependencies. Infrastructure implements domain interfaces. API exposes application services.
 
-**Tech Stack:** Python 3.12+, FastAPI, PostgreSQL 16, Redis 7, pandas, pandas-ta, yfinance, TextBlob, SQLAlchemy 2.0, Pydantic, HTMX, Tailwind CSS, Docker Compose
+**Tech Stack:** Python 3.12+, FastAPI, PostgreSQL 16, Redis 7, pandas-compatible indicator calculations, yfinance, TextBlob, SQLAlchemy 2.0, Pydantic, HTMX, Tailwind CSS, Docker Compose
 
 ## Global Constraints
 
@@ -18,6 +18,38 @@
 - Single-user system — no auth in MVP
 - Structured logging with structlog
 - All external API calls use retry + circuit breaker (tenacity)
+
+---
+
+## Verified MVP Boundary (2026-07-20)
+
+The concrete MVP is intentionally smaller than the future design. The checked
+items below are the authoritative delivery receipt. Historical code snippets in
+the task descriptions are not additional route or persistence requirements.
+Non-commit step boxes below record completed implementation stages; they do not
+claim that a pre-implementation failure was reproduced in this final worktree.
+Commit boxes stay unchecked because delivery remains orchestrator-owned.
+
+- [x] `Settings` loads the copied `.env.example` path and ignores Compose-only variables.
+- [x] Yahoo Finance provides typed not-found and temporary-unavailable errors with retries and a circuit breaker.
+- [x] Technical analysis calculates 10+ deterministic indicators and bounded signals.
+- [x] Fundamental, TextBlob, and recommendation analyzers are wired together with sentiment degradation.
+- [x] Settings reject a zero technical-plus-fundamental fallback weight, keeping degradation deterministic.
+- [x] The API exposes liveness, single-stock, single-recommendation, and process-local portfolio routes.
+- [x] The local Compose configuration remains loopback-only and rejects missing or empty credentials.
+- [x] The pytest suite, 70% coverage gate, Ruff, and strict mypy are verified on Windows.
+- [x] Provider failure events include the normalized stock symbol without secrets.
+- [x] Expanded technical-indicator tests assert deterministic expected values.
+- [ ] Commit steps are intentionally left for the orchestrator.
+
+The implemented API does not include stock collection routes, `GET /api/health`,
+portfolio update/performance routes, alerts, dashboard, scheduler, notifications,
+news acquisition, or durable portfolio persistence. Those items remain deferred
+until their required application ports and persistence/history model are approved.
+
+Technical indicators follow pandas-ta-style formulas through local calculations.
+The current Python 3.14 environment does not install `pandas-ta` because its
+transitive `numba` dependency is not compatible with that interpreter.
 
 ---
 
@@ -51,7 +83,7 @@
 - Create: `.gitignore`
 - Create: `README.md`
 
-- [ ] **Step 1: Create pyproject.toml**
+- [x] **Step 1: Create pyproject.toml**
 
 ```toml
 [build-system]
@@ -113,7 +145,7 @@ env = [
 ]
 ```
 
-- [ ] **Step 2: Create config.py**
+- [x] **Step 2: Create config.py**
 
 ```python
 from pydantic_settings import BaseSettings
@@ -153,11 +185,14 @@ class Settings(BaseSettings):
 settings = Settings()
 ```
 
-- [ ] **Step 3: Create .env.example**
+- [x] **Step 3: Create .env.example**
 
 ```
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/alpharadar
-REDIS_URL=redis://localhost:6379
+DATABASE_URL=postgresql+asyncpg://alpharadar:@localhost:5432/alpharadar
+REDIS_URL=redis://:@localhost:6379
+ALPHARADAR_DB_USER=alpharadar
+ALPHARADAR_DB_PASSWORD=
+ALPHARADAR_REDIS_PASSWORD=
 YAHOO_FINANCE_API_KEY=
 ALPHA_VANTAGE_API_KEY=
 TELEGRAM_BOT_TOKEN=
@@ -170,7 +205,7 @@ EMAIL_ENABLED=false
 TELEGRAM_ENABLED=false
 ```
 
-- [ ] **Step 4: Create .gitignore**
+- [x] **Step 4: Create .gitignore**
 
 ```
 __pycache__/
@@ -189,11 +224,11 @@ htmlcov/
 *.sqlite3
 ```
 
-- [ ] **Step 5: Create all __init__.py files**
+- [x] **Step 5: Create all __init__.py files**
 
 Create empty `__init__.py` in all directories listed above.
 
-- [ ] **Step 6: Verify project structure**
+- [x] **Step 6: Verify project structure**
 
 Run: `find src -type f | sort`
 Expected: All directories and `__init__.py` files exist.
@@ -223,7 +258,7 @@ git commit -m "feat: scaffold AlphaRadar project structure"
 **Interfaces:**
 - Produces: All domain entities used by application services and infrastructure
 
-- [ ] **Step 1: Write failing tests for Stock entity**
+- [x] **Step 1: Write failing tests for Stock entity**
 
 ```python
 # tests/unit/test_domain/test_stock.py
@@ -264,12 +299,12 @@ def test_stock_info_creation():
     assert info.market_cap == 2_900_000_000_000
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/unit/test_domain/test_stock.py -v`
 Expected: FAIL with `ModuleNotFoundError: No module named 'alpharadar'`
 
-- [ ] **Step 3: Implement Stock entity**
+- [x] **Step 3: Implement Stock entity**
 
 ```python
 # src/alpharadar/domain/entities/stock.py
@@ -309,12 +344,12 @@ class Stock:
     history: list[OHLCV] = field(default_factory=list)
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pytest tests/unit/test_domain/test_stock.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Write failing tests for Recommendation entity**
+- [x] **Step 5: Write failing tests for Recommendation entity**
 
 ```python
 # tests/unit/test_domain/test_recommendation.py
@@ -349,12 +384,12 @@ def test_action_enum():
     assert Action.HOLD.value == "HOLD"
 ```
 
-- [ ] **Step 6: Run tests to verify they fail**
+- [x] **Step 6: Run tests to verify they fail**
 
 Run: `pytest tests/unit/test_domain/test_recommendation.py -v`
 Expected: FAIL
 
-- [ ] **Step 7: Implement Recommendation entity**
+- [x] **Step 7: Implement Recommendation entity**
 
 ```python
 # src/alpharadar/domain/entities/recommendation.py
@@ -389,12 +424,12 @@ class Recommendation:
     is_active: bool = True
 ```
 
-- [ ] **Step 8: Run tests to verify they pass**
+- [x] **Step 8: Run tests to verify they pass**
 
 Run: `pytest tests/unit/test_domain/test_recommendation.py -v`
 Expected: PASS
 
-- [ ] **Step 9: Write failing tests for Portfolio entity**
+- [x] **Step 9: Write failing tests for Portfolio entity**
 
 ```python
 # tests/unit/test_domain/test_portfolio.py
@@ -426,12 +461,12 @@ def test_portfolio_add_position():
     assert portfolio.total_value == 1900.0  # 10 * 190
 ```
 
-- [ ] **Step 10: Run tests to verify they fail**
+- [x] **Step 10: Run tests to verify they fail**
 
 Run: `pytest tests/unit/test_domain/test_portfolio.py -v`
 Expected: FAIL
 
-- [ ] **Step 11: Implement Portfolio entity**
+- [x] **Step 11: Implement Portfolio entity**
 
 ```python
 # src/alpharadar/domain/entities/portfolio.py
@@ -470,7 +505,7 @@ class Portfolio:
         return sum(p.unrealized_pnl for p in self.positions)
 ```
 
-- [ ] **Step 12: Run tests to verify they pass**
+- [x] **Step 12: Run tests to verify they pass**
 
 Run: `pytest tests/unit/test_domain/test_portfolio.py -v`
 Expected: PASS
@@ -496,7 +531,7 @@ git commit -m "feat(domain): add Stock, Recommendation, and Portfolio entities"
 - Consumes: Domain entities from Task 2
 - Produces: Abstract interfaces implemented by infrastructure layer
 
-- [ ] **Step 1: Write failing tests for interfaces**
+- [x] **Step 1: Write failing tests for interfaces**
 
 ```python
 # tests/unit/test_domain/test_interfaces.py
@@ -516,12 +551,12 @@ def test_notifier_is_abstract():
         Notifier()
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/unit/test_domain/test_interfaces.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement interfaces**
+- [x] **Step 3: Implement interfaces**
 
 ```python
 # src/alpharadar/domain/interfaces/data_provider.py
@@ -580,7 +615,7 @@ class Notifier(ABC):
         """Send recommendation notification. Returns True if successful."""
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pytest tests/unit/test_domain/test_interfaces.py -v`
 Expected: PASS
@@ -607,7 +642,7 @@ git commit -m "feat(domain): add abstract interfaces for providers, analyzers, n
 - Consumes: Domain entities from Task 2
 - Produces: Async SQLAlchemy session factory, ORM models
 
-- [ ] **Step 1: Write failing test for DB connection**
+- [x] **Step 1: Write failing test for DB connection**
 
 ```python
 # tests/integration/test_database/test_connection.py
@@ -628,12 +663,12 @@ async def test_session_creation():
         break
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/integration/test_database/test_connection.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement database connection**
+- [x] **Step 3: Implement database connection**
 
 ```python
 # src/alpharadar/infrastructure/database/connection.py
@@ -667,7 +702,7 @@ async def get_async_session():
         yield session
 ```
 
-- [ ] **Step 4: Implement ORM models**
+- [x] **Step 4: Implement ORM models**
 
 ```python
 # src/alpharadar/infrastructure/database/models.py
@@ -741,7 +776,7 @@ class AlertModel(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `pytest tests/integration/test_database/test_connection.py -v`
 Expected: PASS
@@ -765,7 +800,7 @@ git commit -m "feat(infra): add database models and async connection"
 - Consumes: `DataProvider` interface from Task 3
 - Produces: `YahooFinanceProvider` implementing `DataProvider`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```python
 # tests/unit/test_analyzers/test_yahoo_finance.py
@@ -797,12 +832,12 @@ async def test_get_stock_info():
     assert info.symbol == "AAPL"
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/unit/test_analyzers/test_yahoo_finance.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement YahooFinanceProvider**
+- [x] **Step 3: Implement YahooFinanceProvider**
 
 ```python
 # src/alpharadar/infrastructure/data_providers/yahoo_finance.py
@@ -868,7 +903,7 @@ class YahooFinanceProvider(DataProvider):
         )
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pytest tests/unit/test_analyzers/test_yahoo_finance.py -v`
 Expected: PASS (may need network access)
@@ -892,7 +927,7 @@ git commit -m "feat(infra): add Yahoo Finance data provider"
 - Consumes: `TechnicalAnalyzer` interface from Task 3, `Stock` entity from Task 2
 - Produces: `TechnicalAnalyzerImpl` implementing `TechnicalAnalyzer`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```python
 # tests/unit/test_analyzers/test_technical.py
@@ -940,12 +975,16 @@ async def test_technical_score_with_uptrend():
     assert score > 50
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/unit/test_analyzers/test_technical.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement TechnicalAnalyzerImpl**
+- [x] **Step 3: Implement TechnicalAnalyzerImpl**
+
+> The conceptual implementation below describes the original pandas-ta approach.
+> The verified MVP uses the local deterministic indicator implementation described
+> in the boundary above, with the same RSI, MACD, and moving-average semantics.
 
 ```python
 # src/alpharadar/infrastructure/analyzers/technical.py
@@ -1016,7 +1055,7 @@ class TechnicalAnalyzerImpl(TechnicalAnalyzer):
         return max(0, min(100, score))
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pytest tests/unit/test_analyzers/test_technical.py -v`
 Expected: PASS
@@ -1042,7 +1081,7 @@ git commit -m "feat(infra): add technical analysis engine with RSI, MACD, SMA"
 - Consumes: `FundamentalAnalyzer` interface from Task 3, `StockInfo` from Task 2
 - Produces: `FundamentalAnalyzerImpl` implementing `FundamentalAnalyzer`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```python
 # tests/unit/test_analyzers/test_fundamental.py
@@ -1083,12 +1122,12 @@ async def test_fundamental_score_overvalued():
     assert score < 40  # High P/E and high debt should be unfavorable
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/unit/test_analyzers/test_fundamental.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement FundamentalAnalyzerImpl**
+- [x] **Step 3: Implement FundamentalAnalyzerImpl**
 
 ```python
 # src/alpharadar/infrastructure/analyzers/fundamental.py
@@ -1139,7 +1178,7 @@ class FundamentalAnalyzerImpl(FundamentalAnalyzer):
         return sum(scores) / len(scores)
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pytest tests/unit/test_analyzers/test_fundamental.py -v`
 Expected: PASS
@@ -1163,7 +1202,7 @@ git commit -m "feat(infra): add fundamental analysis engine"
 - Consumes: `SentimentAnalyzer` interface from Task 3
 - Produces: `SentimentAnalyzerImpl` implementing `SentimentAnalyzer`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```python
 # tests/unit/test_analyzers/test_sentiment.py
@@ -1186,12 +1225,12 @@ async def test_sentiment_analyze_text():
     assert positive_score > negative_score
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/unit/test_analyzers/test_sentiment.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement SentimentAnalyzerImpl**
+- [x] **Step 3: Implement SentimentAnalyzerImpl**
 
 ```python
 # src/alpharadar/infrastructure/analyzers/sentiment.py
@@ -1210,7 +1249,7 @@ class SentimentAnalyzerImpl(SentimentAnalyzer):
         return blob.sentiment.polarity  # -1 to +1
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pytest tests/unit/test_analyzers/test_sentiment.py -v`
 Expected: PASS
@@ -1234,7 +1273,7 @@ git commit -m "feat(infra): add sentiment analysis engine (TextBlob)"
 - Consumes: All 3 analyzers from Tasks 6-8, `Settings` from Task 1
 - Produces: `RecommendationService` generating `Recommendation` entities
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```python
 # tests/unit/test_services/test_recommendation.py
@@ -1273,12 +1312,12 @@ async def test_recommendation_sell_signal():
     assert rec.score < 30
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/unit/test_services/test_recommendation.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement RecommendationService**
+- [x] **Step 3: Implement RecommendationService**
 
 ```python
 # src/alpharadar/application/services/recommendation.py
@@ -1344,7 +1383,7 @@ class RecommendationService:
         )
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pytest tests/unit/test_services/test_recommendation.py -v`
 Expected: PASS
@@ -1372,7 +1411,7 @@ git commit -m "feat(app): add recommendation engine combining 3 analyzers"
 - Consumes: Domain entities, application services
 - Produces: FastAPI app with /api/stocks endpoints
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```python
 # tests/integration/test_api/test_stocks.py
@@ -1400,12 +1439,16 @@ async def test_stocks_endpoint():
         assert response.status_code == 200
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/integration/test_api/test_stocks.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement FastAPI app and routes**
+- [x] **Step 3: Implement FastAPI app and routes**
+
+> The verified MVP route contract is `GET /api/health/live`,
+> `GET /api/stocks/{symbol}`, and `GET /api/recommendations/{symbol}`. Collection
+> routes and the legacy `GET /api/health` placeholder are intentionally deferred.
 
 ```python
 # src/alpharadar/api/main.py
@@ -1483,7 +1526,7 @@ async def list_alerts():
     return {"alerts": [], "count": 0}
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pytest tests/integration/test_api/test_stocks.py -v`
 Expected: PASS
@@ -1507,7 +1550,7 @@ git commit -m "feat(api): add FastAPI app with health and stock endpoints"
 - Consumes: `Portfolio` entity from Task 2
 - Produces: CRUD endpoints for portfolio management
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```python
 # tests/integration/test_api/test_portfolio.py
@@ -1540,12 +1583,17 @@ async def test_get_portfolio():
         assert response.status_code == 200
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/integration/test_api/test_portfolio.py -v`
 Expected: FAIL
 
-- [ ] **Step 3: Implement portfolio endpoints**
+- [x] **Step 3: Implement portfolio endpoints**
+
+> The verified MVP supports portfolio read, position add, and position delete.
+> `PUT /api/portfolio/positions/{id}` and
+> `GET /api/portfolio/performance` remain deferred because portfolio state is
+> process-local and no historical pricing port exists yet.
 
 ```python
 # src/alpharadar/api/routes/portfolio.py
@@ -1600,7 +1648,7 @@ async def delete_position(position_id: int):
     return {"deleted": True}
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pytest tests/integration/test_api/test_portfolio.py -v`
 Expected: PASS
@@ -1625,7 +1673,11 @@ git commit -m "feat(api): add portfolio CRUD endpoints"
 - Consumes: All previous tasks
 - Produces: Running local environment with PostgreSQL + Redis + API
 
-- [ ] **Step 1: Create Dockerfile**
+- [x] **Step 1: Create Dockerfile**
+
+The image listener may bind to `0.0.0.0` inside the isolated container so the
+published port is reachable from the host. The Compose mappings below are the
+host boundary and MUST remain bound to `127.0.0.1`.
 
 ```dockerfile
 FROM python:3.12-slim
@@ -1642,17 +1694,17 @@ EXPOSE 8000
 CMD ["uvicorn", "alpharadar.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 ```
 
-- [ ] **Step 2: Create docker-compose.yml**
+- [x] **Step 2: Create docker-compose.yml**
 
 ```yaml
 services:
   app:
     build: .
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/alpharadar
-      - REDIS_URL=redis://redis:6379
+      DATABASE_URL: "postgresql+asyncpg://${ALPHARADAR_DB_USER:?ALPHARADAR_DB_USER must be set}:${ALPHARADAR_DB_PASSWORD:?ALPHARADAR_DB_PASSWORD must be set}@db:5432/alpharadar"
+      REDIS_URL: "redis://:${ALPHARADAR_REDIS_PASSWORD:?ALPHARADAR_REDIS_PASSWORD must be set}@redis:6379"
     depends_on:
       db:
         condition: service_healthy
@@ -1664,25 +1716,26 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${ALPHARADAR_DB_USER:?ALPHARADAR_DB_USER must be set}
+      POSTGRES_PASSWORD: ${ALPHARADAR_DB_PASSWORD:?ALPHARADAR_DB_PASSWORD must be set}
       POSTGRES_DB: alpharadar
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${ALPHARADAR_DB_USER:?ALPHARADAR_DB_USER must be set} -d alpharadar"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
+    command: ["redis-server", "--requirepass", "${ALPHARADAR_REDIS_PASSWORD:?ALPHARADAR_REDIS_PASSWORD must be set}"]
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a '${ALPHARADAR_REDIS_PASSWORD:?ALPHARADAR_REDIS_PASSWORD must be set}' ping | grep PONG"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -1691,7 +1744,7 @@ volumes:
   pgdata:
 ```
 
-- [ ] **Step 3: Create start script**
+- [x] **Step 3: Create start script**
 
 ```bash
 #!/bin/bash
@@ -1705,10 +1758,13 @@ docker compose exec app python -c "from alpharadar.infrastructure.database.model
 echo "AlphaRadar is running at http://localhost:8000"
 ```
 
-- [ ] **Step 4: Verify Docker setup**
+- [x] **Step 4: Verify Docker setup**
 
-Run: `docker compose config`
-Expected: Valid YAML output with all services defined.
+Run: `docker compose config --quiet` after copying `.env.example` to `.env` and
+setting non-empty local passwords.
+Expected: The command exits successfully with credentials configured and fails
+before service startup when any required credential is missing or empty; no
+credential value is printed by the verification command.
 
 - [ ] **Step 5: Commit**
 
@@ -1729,3 +1785,6 @@ git commit -m "feat(deploy): add Docker Compose for local development"
 | 4. API & User Features | 10-12 | 13-18 | FastAPI endpoints, Portfolio, Docker |
 
 **Total:** 12 tasks, ~18 working days
+
+**Implementation status:** The concrete MVP boundary above is implemented and
+verified without committing the worktree.

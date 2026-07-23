@@ -65,4 +65,5 @@ class PostgreSQLPortfolioRepository(PortfolioRepository):
         result = await self._session.execute(
             delete(PositionModel).where(PositionModel.id == position_id)
         )
-        return result.rowcount > 0
+        rowcount: int = result.rowcount  # type: ignore[attr-defined]
+        return rowcount > 0

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from alpharadar.domain.entities.stock import Stock, OHLCV, StockInfo
+from alpharadar.domain.entities.stock import OHLCV, Stock, StockInfo
 
 
 class DataProvider(ABC):

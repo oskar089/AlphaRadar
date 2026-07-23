@@ -12,7 +12,9 @@ class StockModel(Base):
     __tablename__ = "stocks"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    symbol: Mapped[str] = mapped_column(String(10), unique=True, nullable=False, index=True)
+    symbol: Mapped[str] = mapped_column(
+        String(10), unique=True, nullable=False, index=True
+    )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     exchange: Mapped[str] = mapped_column(String(50), nullable=False)
     sector: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -22,7 +24,9 @@ class StockModel(Base):
         default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
     )
 
-    recommendations: Mapped[list["RecommendationModel"]] = relationship(back_populates="stock")
+    recommendations: Mapped[list["RecommendationModel"]] = relationship(
+        back_populates="stock"
+    )
     positions: Mapped[list["PositionModel"]] = relationship(back_populates="stock")
 
 

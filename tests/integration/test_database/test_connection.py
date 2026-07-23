@@ -1,6 +1,5 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
-from sqlalchemy import text
 
 from alpharadar.infrastructure.database.connection import (
     get_async_engine,
@@ -22,12 +21,16 @@ def test_engine_creation(engine: AsyncEngine) -> None:
     assert engine is not None
 
 
-def test_session_factory_creation(session_factory: async_sessionmaker[AsyncSession]) -> None:
+def test_session_factory_creation(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
     assert session_factory is not None
 
 
 @pytest.mark.asyncio()
-async def test_async_session_yields_session(session_factory: async_sessionmaker[AsyncSession]) -> None:
+async def test_async_session_yields_session(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
     from alpharadar.infrastructure.database.connection import get_async_session
 
     gen = get_async_session()

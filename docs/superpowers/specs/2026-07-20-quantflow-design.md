@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-20
 **Author:** Gentle AI + User
-**Status:** Design Approved
+**Status:** Design Approved; concrete MVP boundary rebaselined 2026-07-20
 
 ---
 
@@ -21,6 +21,24 @@ AlphaRadar is a semi-autonomous trading bot that analyzes global stock markets (
 | Stack | FastAPI + PostgreSQL + Redis + pandas | Python ecosystem for finance |
 | Frontend | HTML + Tailwind + HTMX | Simple, no framework overhead |
 | Deployment | Local first → Cloud later | Zero cost MVP |
+
+### Concrete MVP Boundary
+
+The approved design describes the long-term product. The delivered MVP is a
+single-user, loopback-only analysis API with process-local portfolio state:
+
+| Surface | Delivered MVP | Deferred from the design |
+|---------|---------------|--------------------------|
+| Health | `GET /api/health/live` | Legacy `GET /api/health` placeholder |
+| Market data | `GET /api/stocks/{symbol}` via Yahoo Finance | Stock collection routes and alternate providers |
+| Analysis | `GET /api/recommendations/{symbol}` with technical, fundamental, and TextBlob analyzers | News acquisition and scheduled analysis |
+| Portfolio | `GET /api/portfolio`, position `POST`, and position `DELETE` | Position `PUT`, performance history, and durable persistence |
+| Operations | Local Docker Compose with loopback bindings | Alerts, dashboard, scheduler, notifications, and trading |
+
+Technical indicators follow the specified pandas-ta semantics through local
+deterministic calculations. This avoids a Python 3.14-incompatible `numba`
+dependency while preserving the approved RSI/MACD/SMA behavior and the 10+
+indicator strategy.
 
 ---
 
@@ -257,6 +275,10 @@ def generate_recommendation(stock: Stock) -> Recommendation:
 - `DELETE /api/portfolio/positions/{id}` — Remove position
 - `GET /api/portfolio/performance` — Historical performance
 
+The concrete MVP delivers only the summary, add, and remove operations above.
+Update and performance routes remain deferred until durable storage and a
+historical pricing port are approved.
+
 ### 3.5 Alert System
 
 **Alert Types:**
@@ -296,7 +318,9 @@ def generate_recommendation(stock: Stock) -> Recommendation:
 - **Circuit breaker:** After 5 consecutive failures, wait 60s before retry
 
 ### 4.2 Graceful Degradation
-- If sentiment analysis fails → use only technical + fundamental
+- If sentiment analysis fails → use only technical + fundamental, normalized by
+  their active weights; configuration rejects a zero technical-plus-fundamental
+  fallback weight
 - If Alpha Vantage fails → fallback to yfinance only
 - If news scraping fails → skip sentiment, log warning
 
@@ -343,22 +367,40 @@ def generate_recommendation(stock: Stock) -> Recommendation:
 ## 6. Deployment
 
 ### 6.1 Local Development (MVP)
+The local Compose workflow is host-loopback-only. Copy `.env.example` to `.env` and
+set non-empty database and Redis passwords before running it. Compose must reject
+missing or empty credential variables rather than silently selecting defaults. The
+application listener may bind to all interfaces inside its isolated container, but
+every host-published port remains explicitly bound to `127.0.0.1`.
+
 ```yaml
 services:
   app:
     build: .
-    ports: ["8000:8000"]
-    depends_on: [db, redis]
+    ports: ["127.0.0.1:8000:8000"]
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://${ALPHARADAR_DB_USER:?Set ALPHARADAR_DB_USER}:${ALPHARADAR_DB_PASSWORD:?Set ALPHARADAR_DB_PASSWORD}@db:5432/alpharadar"
+      REDIS_URL: "redis://:${ALPHARADAR_REDIS_PASSWORD:?Set ALPHARADAR_REDIS_PASSWORD}@redis:6379"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
   db:
     image: postgres:16
+    environment:
+      POSTGRES_USER: ${ALPHARADAR_DB_USER:?Set ALPHARADAR_DB_USER}
+      POSTGRES_PASSWORD: ${ALPHARADAR_DB_PASSWORD:?Set ALPHARADAR_DB_PASSWORD}
     volumes: [pgdata:/var/lib/postgresql/data]
+    ports: ["127.0.0.1:5432:5432"]
   redis:
     image: redis:7-alpine
-  scheduler:
-    build: .
-    command: python -m alpharadar.scheduler
-    depends_on: [db, redis]
+    command: ["redis-server", "--requirepass", "${ALPHARADAR_REDIS_PASSWORD:?Set ALPHARADAR_REDIS_PASSWORD}"]
+    ports: ["127.0.0.1:6379:6379"]
 ```
+
+Verify the configured workflow with `docker compose config --quiet`; it should
+pass only after the required variables are set.
 
 ### 6.2 Cloud (Post-MVP)
 - Railway ($5/mes) — easiest, git push deploy
@@ -377,6 +419,9 @@ GitHub Actions:
 ---
 
 ## 7. Configuration
+
+The delivered settings require `weight_technical + weight_fundamental > 0` so a
+sentiment failure always has a deterministic technical/fundamental fallback.
 
 ```python
 class Settings(BaseSettings):
@@ -434,16 +479,16 @@ class Settings(BaseSettings):
 
 ## 9. Success Criteria
 
-- [ ] Can fetch real-time market data from yfinance/Alpha Vantage
-- [ ] Technical analysis calculates 10+ indicators correctly
-- [ ] Fundamental analysis scores stocks based on financial metrics
-- [ ] Sentiment analysis processes news headlines
-- [ ] Recommendation engine combines all 3 analyses into actionable scores
-- [ ] Portfolio tracker shows current holdings and P&L
+- [x] Yahoo Finance adapter fetches market metadata, history, and fundamentals
+- [x] Technical analysis calculates 10+ indicators correctly
+- [x] Fundamental analysis scores stocks based on available financial metrics
+- [x] TextBlob sentiment analyzer processes supplied text and degrades to neutral without headlines
+- [x] Recommendation engine combines all 3 analyses into actionable scores
+- [x] Process-local portfolio tracker shows current holdings and P&L
 - [ ] Alert system notifies via email/Telegram when thresholds are met
 - [ ] Dashboard displays all data in a clean, readable interface
-- [ ] All tests pass with 70%+ coverage
-- [ ] Docker compose runs the full stack locally
+- [x] All tests pass with at least 70% coverage
+- [x] Docker Compose configuration validates for the local stack
 
 ---
 
@@ -455,3 +500,6 @@ class Settings(BaseSettings):
 - Multi-user support (single user for now)
 - Mobile app
 - Real-time streaming data (WebSocket)
+- Alerts, dashboard, scheduler, and notification delivery
+- News acquisition and social-media sentiment ingestion
+- Durable portfolio persistence, position updates, and performance history

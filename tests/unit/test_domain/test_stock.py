@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from alpharadar.domain.entities.stock import Stock, OHLCV, StockInfo
+from alpharadar.domain.entities.stock import OHLCV, Stock, StockInfo
 
 
 def test_stock_creation():
