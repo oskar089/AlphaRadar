@@ -1,4 +1,7 @@
+from pathlib import Path
+
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from alpharadar.api.routes import portfolio, recommendations, stocks
 from alpharadar.application.ports.portfolio import PortfolioRepository
@@ -38,6 +41,10 @@ def create_app(
     @app.get("/api/health/live")
     async def liveness() -> dict[str, str]:
         return {"status": "alive", "version": "0.1.0"}
+
+    DIST_DIR = Path(__file__).resolve().parent.parent.parent.parent / "frontend" / "dist"
+    if DIST_DIR.is_dir():
+        app.mount("/", StaticFiles(directory=DIST_DIR, html=True), name="static")
 
     return app
 

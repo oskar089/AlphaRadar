@@ -13,3 +13,8 @@ build/
 htmlcov/
 *.db
 *.sqlite3
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vitest/
