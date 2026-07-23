@@ -1,0 +1,11 @@
+{
+  "portfolio": {
+    "name": "My Portfolio",
+    "positions": [
+      { "id": 1, "symbol": "AAPL", "quantity": 10, "avg_buy_price": 150.0, "current_price": 175.0 }
+    ],
+    "total_value": 1750.0,
+    "total_pnl": 250.0,
+    "storage": "process-local-non-durable"
+  }
+}

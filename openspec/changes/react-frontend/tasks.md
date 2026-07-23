@@ -70,11 +70,11 @@ Chain strategy: pending
 
 ## Phase 6: Testing
 
-- [ ] 6.1 Create `frontend/tests/setup.ts` — MSW server start/stop for unit tests (~15 lines)
-- [ ] 6.2 Create `frontend/tests/fixtures/` — JSON fixture files mirroring API shapes for stocks, recommendations, portfolio (~40 lines)
-- [ ] 6.3 Create `frontend/tests/unit/api-client.test.ts` — test error mapping: 404→"not found", 422→validation, 503→"unavailable", 5xx→generic (~40 lines)
-- [ ] 6.4 Create `frontend/tests/unit/hooks.test.ts` — test `useStock`, `useRecommendation`, `usePortfolio` hooks with MSW (~50 lines)
-- [ ] 6.5 Create `frontend/tests/unit/components.test.tsx` — smoke tests: all 7 components render without crash (~50 lines)
-- [ ] 6.6 Create `frontend/tests/e2e/dashboard.spec.ts` — Playwright: load dashboard, verify portfolio summary or empty state, verify recommendations list (~40 lines)
-- [ ] 6.7 Create `frontend/tests/e2e/stock-detail.spec.ts` — Playwright: navigate to stock detail, verify scores, back navigation (~35 lines)
-- [ ] 6.8 Create `frontend/tests/e2e/portfolio.spec.ts` — Playwright: add position, verify table row, delete position, empty state (~50 lines)
+- [x] 6.1 Create `frontend/tests/setup.ts` — MSW server start/stop for unit tests (~15 lines)
+- [x] 6.2 Create `frontend/tests/fixtures/` — JSON fixture files mirroring API shapes for stocks, recommendations, portfolio (~40 lines)
+- [x] 6.3 Create `frontend/tests/unit/api-client.test.ts` — test error mapping: 404→"not found", 422→validation, 503→"unavailable", 5xx→generic (~40 lines)
+- [x] 6.4 Create `frontend/tests/unit/hooks.test.ts` — test `useStock`, `useRecommendation`, `usePortfolio` hooks with MSW (~50 lines)
+- [x] 6.5 Create `frontend/tests/unit/components.test.tsx` — smoke tests: all 7 components render without crash (~50 lines)
+- [x] 6.6 Create `frontend/tests/e2e/dashboard.spec.ts` — Playwright: load dashboard, verify portfolio summary or empty state, verify recommendations list (~40 lines)
+- [x] 6.7 Create `frontend/tests/e2e/stock-detail.spec.ts` — Playwright: navigate to stock detail, verify scores, back navigation (~35 lines)
+- [x] 6.8 Create `frontend/tests/e2e/portfolio.spec.ts` — Playwright: add position, verify table row, delete position, empty state (~50 lines)
