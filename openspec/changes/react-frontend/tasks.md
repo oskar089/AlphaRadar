@@ -39,12 +39,12 @@ Chain strategy: pending
 
 ## Phase 2: API Layer — Client + Hooks
 
-- [ ] 2.1 Create `frontend/src/lib/api-client.ts` — typed fetch wrapper: `apiClient.get<T>(path)`, `apiClient.post<T>(path, body)`, `apiClient.delete(path)`, error handling mapping 404/422/503/5xx (~50 lines)
-- [ ] 2.2 Create `frontend/src/hooks/use-stock.ts` — TanStack Query hook `useStock(symbol)` for `GET /api/stocks/{symbol}` (~15 lines)
-- [ ] 2.3 Create `frontend/src/hooks/use-recommendation.ts` — TanStack Query hook `useRecommendation(symbol)` for `GET /api/recommendations/{symbol}`, 5min staleTime (~20 lines)
-- [ ] 2.4 Create `frontend/src/hooks/use-portfolio.ts` — TanStack Query hooks: `usePortfolio()` (query), `useAddPosition()` (mutation with invalidate), `useDeletePosition()` (mutation with invalidate) (~80 lines)
-- [ ] 2.5 Create `frontend/src/stores/stock-store.ts` — Zustand store for stock UI state (`selectedSymbol`) (~15 lines)
-- [ ] 2.6 Create `frontend/src/stores/portfolio-store.ts` — Zustand store for portfolio UI state (`isAddFormOpen`, toggle) (~15 lines)
+- [x] 2.1 Create `frontend/src/lib/api-client.ts` — typed fetch wrapper: `apiClient.get<T>(path)`, `apiClient.post<T>(path, body)`, `apiClient.delete(path)`, error handling mapping 404/422/503/5xx (~50 lines)
+- [x] 2.2 Create `frontend/src/hooks/use-stock.ts` — TanStack Query hook `useStock(symbol)` for `GET /api/stocks/{symbol}` (~15 lines)
+- [x] 2.3 Create `frontend/src/hooks/use-recommendation.ts` — TanStack Query hook `useRecommendation(symbol)` for `GET /api/recommendations/{symbol}`, 5min staleTime (~20 lines)
+- [x] 2.4 Create `frontend/src/hooks/use-portfolio.ts` — TanStack Query hooks: `usePortfolio()` (query), `useAddPosition()` (mutation with invalidate), `useDeletePosition()` (mutation with invalidate) (~80 lines)
+- [x] 2.5 Create `frontend/src/stores/stock-store.ts` — Zustand store for stock UI state (`selectedSymbol`) (~15 lines)
+- [x] 2.6 Create `frontend/src/stores/portfolio-store.ts` — Zustand store for portfolio UI state (`isAddFormOpen`, toggle) (~15 lines)
 
 ## Phase 3: Components — Bottom-Up
 
