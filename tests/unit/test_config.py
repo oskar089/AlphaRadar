@@ -87,7 +87,7 @@ def test_settings_database_url_default(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.delenv("DATABASE_URL", raising=False)
-    settings = Settings()
+    settings = Settings(_env_file=None)
     assert settings.database_url == "postgresql+asyncpg://alpharadar:alpharadar@localhost:5432/alpharadar"
 
 
@@ -95,5 +95,5 @@ def test_settings_redis_url_default(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.delenv("REDIS_URL", raising=False)
-    settings = Settings()
+    settings = Settings(_env_file=None)
     assert settings.redis_url == "redis://localhost:6379/0"

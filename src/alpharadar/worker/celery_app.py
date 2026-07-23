@@ -1,14 +1,18 @@
 """Celery application configuration for AlphaRadar."""
 
+import os
+
 from celery import Celery
 
 from alpharadar.worker.schedules import beat_schedule
 
 app = Celery("alpharadar")
 
+_redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+
 app.conf.update(
-    broker_url="redis://localhost:6379/0",
-    result_backend="redis://localhost:6379/0",
+    broker_url=_redis_url,
+    result_backend=_redis_url,
     task_serializer="json",
     result_serializer="json",
     accept_content=["json"],
