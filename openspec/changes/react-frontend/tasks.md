@@ -58,10 +58,10 @@ Chain strategy: pending
 
 ## Phase 4: Pages + Routing
 
-- [ ] 4.1 Create `frontend/src/App.tsx` — React Router config: `/` → Dashboard, `/stocks/:symbol` → StockDetail, `/portfolio` → Portfolio, all wrapped in Layout (~30 lines)
-- [ ] 4.2 Create `frontend/src/pages/Dashboard.tsx` — portfolio summary (total value, P&L), recent recommendations list with StockCards, empty state for no positions (~70 lines)
-- [ ] 4.3 Create `frontend/src/pages/StockDetail.tsx` — stock info, recommendation with scores breakdown (technical, fundamental, sentiment), back button, 404 handling (~80 lines)
-- [ ] 4.4 Create `frontend/src/pages/Portfolio.tsx` — positions table with PositionRows, AddPositionForm, empty state (~70 lines)
+- [x] 4.1 Create `frontend/src/App.tsx` — React Router config: `/` → Dashboard, `/stocks/:symbol` → StockDetail, `/portfolio` → Portfolio, all wrapped in Layout (~30 lines)
+- [x] 4.2 Create `frontend/src/pages/Dashboard.tsx` — portfolio summary (total value, P&L), recent recommendations list with StockCards, empty state for no positions (~70 lines)
+- [x] 4.3 Create `frontend/src/pages/StockDetail.tsx` — stock info, recommendation with scores breakdown (technical, fundamental, sentiment), back button, 404 handling (~80 lines)
+- [x] 4.4 Create `frontend/src/pages/Portfolio.tsx` — positions table with PositionRows, AddPositionForm, empty state (~70 lines)
 
 ## Phase 5: Backend Integration — Docker + Production Serving
 
