@@ -65,8 +65,8 @@ Chain strategy: pending
 
 ## Phase 5: Backend Integration — Docker + Production Serving
 
-- [ ] 5.1 Modify `src/alpharadar/api/main.py` — add StaticFiles mount for `frontend/dist` with `html=True` SPA fallback (~10 lines)
-- [ ] 5.2 Modify `Dockerfile` — add Node 20 Alpine build stage for `frontend/`, copy dist into Python production image (~15 lines)
+- [x] 5.1 Modify `src/alpharadar/api/main.py` — add StaticFiles mount for `frontend/dist` with `html=True` SPA fallback (~10 lines)
+- [x] 5.2 Modify `Dockerfile` — add Node 20 Alpine build stage for `frontend/`, copy dist into Python production image (~15 lines)
 
 ## Phase 6: Testing
 
