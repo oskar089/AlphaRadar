@@ -48,13 +48,13 @@ Chain strategy: pending
 
 ## Phase 3: Components — Bottom-Up
 
-- [ ] 3.1 Create `frontend/src/components/Layout.tsx` — sidebar/header nav shell with links to Dashboard, Portfolio (~40 lines)
-- [ ] 3.2 Create `frontend/src/components/RecommendationBadge.tsx` — color-coded pill: BUY=green, SELL=red, HOLD=yellow (~20 lines)
-- [ ] 3.3 Create `frontend/src/components/StockCard.tsx` — reusable card: symbol, name, action badge, score, clickable → onClick (~35 lines)
-- [ ] 3.4 Create `frontend/src/components/PositionRow.tsx` — table row: symbol, quantity, avg price, current price, P&L (green/red), delete button (~40 lines)
-- [ ] 3.5 Create `frontend/src/components/AddPositionForm.tsx` — form with symbol, quantity, avg_buy_price inputs, inline validation (required, >0), submit handler (~50 lines)
-- [ ] 3.6 Create `frontend/src/components/LoadingSpinner.tsx` — centered loading indicator (~10 lines)
-- [ ] 3.7 Create `frontend/src/components/ErrorMessage.tsx` — error display with optional retry button (~15 lines)
+- [x] 3.1 Create `frontend/src/components/Layout.tsx` — sidebar/header nav shell with links to Dashboard, Portfolio (~40 lines)
+- [x] 3.2 Create `frontend/src/components/RecommendationBadge.tsx` — color-coded pill: BUY=green, SELL=red, HOLD=yellow (~20 lines)
+- [x] 3.3 Create `frontend/src/components/StockCard.tsx` — reusable card: symbol, name, action badge, score, clickable → onClick (~35 lines)
+- [x] 3.4 Create `frontend/src/components/PositionRow.tsx` — table row: symbol, quantity, avg price, current price, P&L (green/red), delete button (~40 lines)
+- [x] 3.5 Create `frontend/src/components/AddPositionForm.tsx` — form with symbol, quantity, avg_buy_price inputs, inline validation (required, >0), submit handler (~50 lines)
+- [x] 3.6 Create `frontend/src/components/LoadingSpinner.tsx` — centered loading indicator (~10 lines)
+- [x] 3.7 Create `frontend/src/components/ErrorMessage.tsx` — error display with optional retry button (~15 lines)
 
 ## Phase 4: Pages + Routing
 
