@@ -1,0 +1,80 @@
+schema: spec-driven
+
+context: |
+  AlphaRadar is a semi-autonomous stock analysis and recommendation MVP.
+  Python 3.12, FastAPI async, SQLAlchemy async + asyncpg, Pydantic v2.
+  Hexagonal/clean architecture: domain → application → infrastructure.
+  Background jobs via Celery + Redis. Data via yfinance, sentiment via TextBlob.
+  PostgreSQL for persistence. Docker Compose for local dev.
+
+strict_tdd: true
+
+testing:
+  runner: pytest
+  command: "pytest"
+  coverage_command: "pytest --cov=src/alpharadar --cov-report=term-missing"
+  coverage_threshold: 70
+  layers:
+    unit:
+      available: true
+      tool: pytest
+      path: tests/unit/
+    integration:
+      available: true
+      tool: pytest + httpx + pytest-asyncio
+      path: tests/integration/
+    infrastructure:
+      available: true
+      tool: pytest
+      path: tests/infrastructure/
+    worker:
+      available: true
+      tool: pytest
+      path: tests/worker/
+    e2e:
+      available: false
+      tool: "—"
+  quality:
+    linter:
+      available: true
+      command: "ruff check src/ tests/"
+    type_checker:
+      available: true
+      command: "mypy src/alpharadar"
+    formatter:
+      available: true
+      command: "ruff format src/ tests/"
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Reference affected hexagonal layers
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for async flows
+    - Document architecture decisions with rationale
+    - Map to hexagonal layers (domain/application/infrastructure)
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+    - Each task should map to a test file or test layer
+  apply:
+    guidelines:
+      - Follow existing code patterns in src/alpharadar
+      - Domain layer has no external dependencies
+      - Use async/await for all I/O-bound operations
+      - Prefer Pydantic models for data structures
+    tdd: true
+    test_command: "pytest"
+    coverage_command: "pytest --cov=src/alpharadar --cov-report=term-missing"
+    coverage_threshold: 70
+  verify:
+    test_command: "pytest"
+    coverage_command: "pytest --cov=src/alpharadar --cov-report=term-missing --cov-fail-under=70"
+    build_command: "ruff check src/ tests/ && mypy src/alpharadar"
+    coverage_threshold: 70
+  archive:
+    - Warn before merging destructive deltas
+    - Update openspec/specs/ main specs after archive
