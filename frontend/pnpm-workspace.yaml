@@ -1,2 +1,5 @@
 allowBuilds:
   msw: true
+  esbuild: true
+  "@tailwindcss/oxide": true
+  lightningcss: true
